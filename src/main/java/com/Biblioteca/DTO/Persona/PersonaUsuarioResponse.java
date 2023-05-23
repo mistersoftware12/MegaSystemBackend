@@ -10,7 +10,9 @@ public class PersonaUsuarioResponse implements Serializable {
 
     private Long id;
 
-    private Long idUsuario;
+    private Long idPersona;
+
+    private  Long idUsuario;
     private String cedula;
 
     private String apellidos;
@@ -25,9 +27,15 @@ public class PersonaUsuarioResponse implements Serializable {
 
     private Long idRol;
 
+    private Date fechaNacimiento;
+
     private String token;
 
-    public PersonaUsuarioResponse(Long id, String cedula, String apellidos, String nombres,  String email, String telefono, String clave, Long idRol,String token) {
+    private Long idEmpresa;
+
+    private String nombreRol;
+
+    public PersonaUsuarioResponse(Long id, String cedula, String apellidos, String nombres,  String email, String telefono, String clave, Long idRol,String token , Long idEmpresa) {
         this.id = id;
         this.cedula = cedula;
         this.apellidos = apellidos;
@@ -37,6 +45,7 @@ public class PersonaUsuarioResponse implements Serializable {
         this.clave = clave;
         this.idRol = idRol;
         this.token = token;
+        this.idEmpresa = idEmpresa;
     }
 
     public PersonaUsuarioResponse() {

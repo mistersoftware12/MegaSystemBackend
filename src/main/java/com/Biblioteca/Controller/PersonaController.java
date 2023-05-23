@@ -20,34 +20,30 @@ public class PersonaController {
     private PersonaService personaService;
 
 
+    @PostMapping("/registrarUsuario")
+    public ResponseEntity<?> registroAlmacen(@RequestBody PersonaUsuarioRequest request){
+        return new ResponseEntity<>(personaService.registrarPersona(request,1) , HttpStatus.OK);
+    }
+
     @PutMapping("/updateUsuario")
-    public ResponseEntity<?> updateUsuario(@RequestBody PersonaUsuarioRequest request) {
-        personaService.updateUsuario(request);
+    public ResponseEntity<?> updateUsuario(@RequestBody PersonaUsuarioRequest1 request) {
+        personaService.actualizarPersona(request,1);
         return new ResponseEntity(new Mensaje("Usuario Actualizado"), HttpStatus.OK);
     }
 
-    @PostMapping("/registroUsuario")
-    public ResponseEntity<PersonaUsuarioResponse> registroUsuario(@RequestBody PersonaUsuarioRequest personaRequest) throws Exception {
-        PersonaUsuarioResponse personaResponse = personaService.registrarUsuario(personaRequest);
-
-        if (personaResponse == null) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<>(personaResponse, HttpStatus.CREATED);
-    }
 
 
 
-
-    @GetMapping("/allUsuarios")
-    public ResponseEntity<List<PersonaUsuarioResponse>> listAllUsuarios() {
-        List<PersonaUsuarioResponse> users = personaService.listAllUsuarios();
+    @GetMapping("/allUsuarios/{idEmpresa}")
+    public ResponseEntity<List<PersonaUsuarioResponse>> listAllUsuarios(@PathVariable Long idEmpresa) {
+        List<PersonaUsuarioResponse> users = personaService.listAllUsuarios(idEmpresa);
         return new ResponseEntity<List<PersonaUsuarioResponse>>(users, HttpStatus.OK);
     }
 
-    @GetMapping("/usuario/{cedula}")
-    public ResponseEntity<PersonaUsuarioResponse> listUsuarioByCedula(@PathVariable String cedula){
-        PersonaUsuarioResponse user = personaService.usuarioByCedula(cedula);
+
+    @GetMapping("/usuario/{idUsuario}")
+    public ResponseEntity<PersonaUsuarioResponse> listUsuarioByCedula(@PathVariable Long idUsuario){
+        PersonaUsuarioResponse user = personaService.usuarioByCedula(idUsuario);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 

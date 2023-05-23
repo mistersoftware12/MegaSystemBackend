@@ -2,10 +2,13 @@ package com.Biblioteca.Service;
 
 import com.Biblioteca.DTO.Persona.*;
 import com.Biblioteca.Exceptions.BadRequestException;
+import com.Biblioteca.Models.Categoria.Categoria;
+import com.Biblioteca.Models.Empresa.Empresa;
 import com.Biblioteca.Models.Persona.Cliente;
 import com.Biblioteca.Models.Persona.Persona;
 import com.Biblioteca.Models.Persona.Usuario;
 import com.Biblioteca.Models.Roles.Roles;
+import com.Biblioteca.Repository.Empresa.EmpresaRepository;
 import com.Biblioteca.Repository.Persona.ClienteRepository;
 import com.Biblioteca.Repository.Persona.PersonaRepository;
 import com.Biblioteca.Repository.Persona.UsuarioRepository;
@@ -20,7 +23,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.transaction.Transactional;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
@@ -32,6 +39,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class PersonaService implements UserDetailsService {
+    @Autowired
+    private EmpresaRepository empresaRepository;
 
     @Autowired
     private PersonaRepository personaRepository;
@@ -41,6 +50,7 @@ public class PersonaService implements UserDetailsService {
 
     @Autowired
     private RolesRepository rolesRepository;
+
     @Autowired
     private ClienteRepository clienteRepository;
 
@@ -49,128 +59,76 @@ public class PersonaService implements UserDetailsService {
     @Autowired
     private JwtUtil jwtUtil;
 
+    public Long registrarPersona(PersonaUsuarioRequest personaUsuarioRequest, int numero) {
 
+        Boolean estado = false;
 
+        if (countUsuario(personaUsuarioRequest.getCedula(), personaUsuarioRequest.getIdEmpresa()) == BigInteger.valueOf(0)) {
+            estado = true;
+        } else {
+            estado = false;
+        }
 
+        if (estado == true) {
+            Optional<Empresa> optionalEmpresa = empresaRepository.findById(personaUsuarioRequest.getIdEmpresa());
+            if (optionalEmpresa.isPresent()) {
 
-    @Transactional
-    public PersonaUsuarioResponse registrarUsuario(PersonaUsuarioRequest personaUsuarioRequest) throws Exception {
-        Optional<Persona> optionalPersona = personaRepository.findByEmail(personaUsuarioRequest.getEmail());
-        if(!optionalPersona.isPresent()) {
-            Persona newPersona = new Persona();
-            newPersona.setCedula(personaUsuarioRequest.getCedula());
-            newPersona.setApellidos(personaUsuarioRequest.getApellidos());
-            newPersona.setNombres(personaUsuarioRequest.getNombres());
-            newPersona.setTelefono(personaUsuarioRequest.getTelefono());
-            newPersona.setEmail(personaUsuarioRequest.getEmail());
-            if (!getPersona(personaUsuarioRequest.getCedula())) {
-                Persona persona = personaRepository.save(newPersona);
-                if (persona != null) {
-                    guardarUsuario(persona.getCedula(), personaUsuarioRequest.getClave(), personaUsuarioRequest.getIdRol());
-                    Optional<Usuario> user = usuarioRepository.findByPersona(persona);
-                    return new PersonaUsuarioResponse(persona.getId(), persona.getCedula(),
-                            persona.getApellidos(), persona.getNombres(), persona.getEmail(),
-                             persona.getTelefono(), user.get().getClave(), user.get().getRoles().getId(),generateTokenSignUp(personaUsuarioRequest));
+                Persona newPersona = new Persona();
+                newPersona.setEmpresa(optionalEmpresa.get());
+                newPersona.setCedula(personaUsuarioRequest.getCedula());
+                newPersona.setApellidos(personaUsuarioRequest.getApellidos());
+                newPersona.setNombres(personaUsuarioRequest.getNombres());
+                newPersona.setEmail(personaUsuarioRequest.getEmail());
+                newPersona.setTelefono(personaUsuarioRequest.getTelefono());
+                newPersona.setFechaNacimiento(personaUsuarioRequest.getFechaNacimiento());
+                try {
+                    personaRepository.save(newPersona);
 
-                }else {
-                    log.error("No se puedo guardar el usuario con cédula: {} e email: {}", personaUsuarioRequest.getCedula(), personaUsuarioRequest.getEmail());
-                    throw new BadRequestException("No se pudo guardar el usuario");
+                    if (numero == 1) {
+                        registrarUsuario(newPersona.getId(), personaUsuarioRequest);
+                    }
+                    return newPersona.getId();
+                } catch (Exception e) {
+                    throw new BadRequestException("No se registró la proforma" + e);
                 }
-            }else {
-                log.error("La cédula ya está registrada: {}", personaUsuarioRequest.getCedula());
-                throw new BadRequestException("La cedula ingresada, ya esta registrada, si la cedula le pertenece contactenos a");
+            } else {
+                throw new BadRequestException("No existe una empresa con id " + personaUsuarioRequest.getIdEmpresa());
             }
-        }else {
-            throw new BadRequestException("El email ingresado, ya esta registrado");
+        } else {
+            throw new BadRequestException("Ya existe una persona registrado con esa cédula");
         }
+
+
     }
 
+    public Long registrarUsuario(Long idPersona, PersonaUsuarioRequest personaUsuarioRequest) {
+        Optional<Persona> optionalPersona = personaRepository.findById(idPersona);
+        if (optionalPersona.isPresent()) {
+            Optional<Roles> optionalRoles = rolesRepository.findById(personaUsuarioRequest.getIdRol());
+            if (optionalRoles.isPresent()) {
+                Usuario newUsuario = new Usuario();
+                newUsuario.setPersona(optionalPersona.get());
+                newUsuario.setRoles(optionalRoles.get());
+                newUsuario.setClave(personaUsuarioRequest.getClave());
 
-    public boolean updateUsuario(PersonaUsuarioRequest personaUsuarioRequest){
-        Optional<Persona> optionalPersona = personaRepository.findById(personaUsuarioRequest.getId());
-        if(optionalPersona.isPresent()) {
-
-            optionalPersona.get().setCedula(personaUsuarioRequest.getCedula());
-            optionalPersona.get().setApellidos(personaUsuarioRequest.getApellidos());
-            optionalPersona.get().setNombres(personaUsuarioRequest.getNombres());
-            optionalPersona.get().setTelefono(personaUsuarioRequest.getTelefono());
-            optionalPersona.get().setEmail( personaUsuarioRequest.getEmail());
-            try{
-                Persona persona = personaRepository.save(optionalPersona.get());
-                if(persona != null){
-                   actualizarUsuario(persona, personaUsuarioRequest.getClave(), personaUsuarioRequest.getIdRol());
-
-                }else {
-                    throw new BadRequestException("No se actualizó la persona");
+                try {
+                    usuarioRepository.save(newUsuario);
+                    return newUsuario.getId();
+                } catch (Exception e) {
+                    throw new BadRequestException("No se registró la proforma" + e);
                 }
-            }catch (Exception ex) {
-                throw new BadRequestException("No se actualizó la persona" + ex);
+            } else {
+                throw new BadRequestException("No existe un rol con id " + personaUsuarioRequest.getIdRol());
             }
-        }else{
-            throw new BadRequestException("No existe una persona con id" + personaUsuarioRequest.getId());
+        } else {
+            throw new BadRequestException("No existe una persona con id " + idPersona);
         }
-        return false;
-    }
-    private boolean guardarUsuario(String cedula,String clave,Long idRol){
-        Optional<Persona> optionalPersona = personaRepository.findByCedula(cedula);
-        if(optionalPersona.isPresent()){
-            Optional<Roles> optionalRoles= rolesRepository.findById(idRol);
-            if(optionalRoles.isPresent()){
-            Persona persona = optionalPersona.get();
-            Usuario newUsuario = new Usuario();
-            newUsuario.setClave(clave);
-            newUsuario.setPersona(persona);
-            newUsuario.setRoles(optionalRoles.get());
-            Usuario user = usuarioRepository.save(newUsuario);
-            if(user!=null){
-                return true;
-            }else{
-                throw new BadRequestException("Usuario no registrado");
-            }
 
-            }else{
-                throw new BadRequestException("El rol seleccionado no existe");
-            }
 
-        }else{
-            throw new BadRequestException("La cedula ingresada, no está registrada");
-        }
-    }
-    private boolean actualizarUsuario(Persona persona, String clave,Long idRol){
-        Optional<Usuario> optionalUsuario = usuarioRepository.findByPersona(persona);
-        if(optionalUsuario.isPresent()){
-            Optional<Roles> optionalRoles= rolesRepository.findById(idRol);
-            if(optionalRoles.isPresent()){
-
-                optionalUsuario.get().setClave(clave);
-                optionalUsuario.get().setPersona(persona);
-                optionalUsuario.get().setRoles(optionalRoles.get());
-
-                try{
-                    Usuario usuario = usuarioRepository.save(optionalUsuario.get());
-                    return true;
-                }catch (Exception ex) {
-                    throw new BadRequestException("No se actualizó tbl_usuario" + ex);
-                }
-            }else{
-                throw new BadRequestException("El rol seleccionado no existe");
-            }
-
-        }else{
-            throw new BadRequestException("La cedula ingresada, no está registrada");
-        }
     }
 
-
-    private boolean getPersona(String cedula) {
-        return personaRepository.existsByCedula(cedula);
-    }
-
-
-
-
-    public List<PersonaUsuarioResponse> listAllUsuarios(){
-        List<Usuario> usuarios = usuarioRepository.findAll();
+    public List<PersonaUsuarioResponse> listAllUsuarios(Long idEmpresa){
+        List<Usuario> usuarios = usuarioRepository.findAllByIdEmpresa(idEmpresa);
         return usuarios.stream().map(usuarioRequest->{
             PersonaUsuarioResponse pcr = new PersonaUsuarioResponse();
             pcr.setId(usuarioRequest.getPersona().getId());
@@ -180,35 +138,96 @@ public class PersonaService implements UserDetailsService {
             pcr.setApellidos(usuarioRequest.getPersona().getApellidos());
             pcr.setTelefono(usuarioRequest.getPersona().getTelefono());
             pcr.setEmail(usuarioRequest.getPersona().getEmail());
+            pcr.setFechaNacimiento(usuarioRequest.getPersona().getFechaNacimiento());
             pcr.setIdRol(usuarioRequest.getRoles().getId());
-
+            pcr.setNombreRol(usuarioRequest.getRoles().getDescripcion());
             return pcr;
         }).collect(Collectors.toList());
     }
 
-    public PersonaUsuarioResponse usuarioByCedula(String cedula){
+    public PersonaUsuarioResponse usuarioByCedula(Long id){
+
         PersonaUsuarioResponse response = new PersonaUsuarioResponse();
-        Optional<Persona> persona = personaRepository.findByCedula(cedula);
-        if(persona.isPresent()) {
-            Optional<Usuario> user = usuarioRepository.findByPersona(persona.get());
-            if(user.isPresent()) {
-                response.setId(persona.get().getId());
-                response.setIdUsuario(user.get().getId());
-                response.setCedula(user.get().getPersona().getCedula());
-                response.setNombres(user.get().getPersona().getNombres());
-                response.setApellidos(user.get().getPersona().getApellidos());
-                response.setTelefono(user.get().getPersona().getTelefono());
-                response.setEmail(user.get().getPersona().getEmail());
-                response.setIdRol(user.get().getRoles().getId());
-                return response;
-            }else{
-                throw new BadRequestException("No existe un persona con cédula" +cedula);
-            }
+        Optional<Usuario> usuarioRequest = usuarioRepository.findById(id);
+
+        if(usuarioRequest.isPresent()){
+            response.setId(usuarioRequest.get().getId());
+            response.setIdPersona(usuarioRequest.get().getPersona().getId());
+            response.setIdUsuario(usuarioRequest.get().getId());
+            response.setCedula(usuarioRequest.get().getPersona().getCedula());
+            response.setApellidos(usuarioRequest.get().getPersona().getApellidos());
+            response.setNombres(usuarioRequest.get().getPersona().getNombres());
+            response.setFechaNacimiento(usuarioRequest.get().getPersona().getFechaNacimiento());
+            response.setEmail(usuarioRequest.get().getPersona().getEmail());
+            response.setTelefono(usuarioRequest.get().getPersona().getTelefono());
+            response.setIdRol(usuarioRequest.get().getRoles().getId());
+
+            return response;
         }else{
-            throw new BadRequestException("No existe un cliente vinculado a esa persona");
+            throw new BadRequestException("No existe un usaurio con id seleccionado");
+        }
+
+
+    }
+
+    @Transactional
+    public boolean actualizarPersona(PersonaUsuarioRequest1 personaUsuarioRequest , int numero ){
+
+        Optional<Persona> persona = personaRepository.findById(personaUsuarioRequest.getIdPersona());
+        if(persona.isPresent()){
+
+            persona.get().setNombres(personaUsuarioRequest.getNombres());
+            persona.get().setApellidos(personaUsuarioRequest.getApellidos());
+            persona.get().setEmail(personaUsuarioRequest.getEmail());
+            persona.get().setFechaNacimiento(personaUsuarioRequest.getFechaNacimiento());
+            persona.get().setTelefono(personaUsuarioRequest.getTelefono());
+            try{
+                personaRepository.save(persona.get());
+                if(numero==1){
+                    actualizarUsuario(personaUsuarioRequest);
+                }
+                return true;
+            }catch (Exception ex) {
+                throw new BadRequestException("No se actualizo" + ex);
+            }
+
+        } else {
+            throw new BadRequestException("No existe una persona  con id "+personaUsuarioRequest.getId() );
         }
     }
 
+    @Transactional
+    public boolean actualizarUsuario(PersonaUsuarioRequest1 personaUsuarioRequest ){
+
+        Optional<Persona> optionalPersona = personaRepository.findById(personaUsuarioRequest.getIdPersona());
+        if(optionalPersona.isPresent()){
+
+            Optional<Roles> optionalRoles = rolesRepository.findById(personaUsuarioRequest.getIdRol());
+
+            if(optionalRoles.isPresent()){
+
+                Optional<Usuario> usuario = usuarioRepository.findById(personaUsuarioRequest.getId());
+
+                if(usuario.isPresent()){
+                    usuario.get().setClave(personaUsuarioRequest.getClave());
+                    usuario.get().setRoles(optionalRoles.get());
+                    try{
+                        usuarioRepository.save(usuario.get());
+                        return true;
+                    }catch (Exception ex) {
+                        throw new BadRequestException("No se actualizo" + ex);
+                    }
+                }else{
+                    throw new BadRequestException("No existe una usuario  con id "+personaUsuarioRequest.getId() );
+                }
+            }else{
+                throw new BadRequestException("No existe unarol  con id "+personaUsuarioRequest.getIdRol() );
+            }
+
+        } else {
+            throw new BadRequestException("No existe una persona  con id "+personaUsuarioRequest.getIdPersona() );
+        }
+    }
 
     public PersonaUsuarioResponse login (UsuarioRequest usuarioRequest) throws Exception {
         Optional<Persona> optional = personaRepository.findByCedula(usuarioRequest.getCedula());
@@ -219,7 +238,7 @@ public class PersonaService implements UserDetailsService {
                     return new PersonaUsuarioResponse(optional.get().getId(),optional.get().getCedula(),
                             optional.get().getApellidos(), optional.get().getNombres(), optional.get().getEmail(),
                             optional.get().getTelefono(), usuarioOptional.get().getClave(), usuarioOptional.get().getRoles().getId(),
-                            generateTokenLogin(usuarioRequest));
+                            generateTokenLogin(usuarioRequest) , usuarioOptional.get().getPersona().getEmpresa().getId());
                 }else{
                     throw new BadRequestException("Contraseña incorrecta para email: " + usuarioRequest.getCedula());
                 }
@@ -261,4 +280,14 @@ public class PersonaService implements UserDetailsService {
         }
         return jwtUtil.generateToken(registerRequest.getCedula());
     }
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    public BigInteger countUsuario(String cedula, Long idEmpresa ) {
+        Query nativeQuery = entityManager.createNativeQuery("SELECT COUNT(p.id) FROM usuario u INNER JOIN persona p ON u.persona_id = p.id WHERE p.cedula =?");
+        nativeQuery.setParameter(1, cedula);
+        return (BigInteger) nativeQuery.getSingleResult();
+    }
+
 }
