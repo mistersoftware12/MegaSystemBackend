@@ -1,6 +1,6 @@
 package com.Biblioteca.Security.jwt;
 
-import com.Biblioteca.Service.PersonaService;
+import com.Biblioteca.Service.Persona.PersonaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;

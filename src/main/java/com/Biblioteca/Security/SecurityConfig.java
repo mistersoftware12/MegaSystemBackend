@@ -2,7 +2,7 @@ package com.Biblioteca.Security;
 
 
 import com.Biblioteca.Security.jwt.JwtFilter;
-import com.Biblioteca.Service.PersonaService;
+import com.Biblioteca.Service.Persona.PersonaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package com.Biblioteca.Service;
+package com.Biblioteca.Service.Persona;
 
 import com.Biblioteca.DTO.Persona.*;
 import com.Biblioteca.Exceptions.BadRequestException;

@@ -3,7 +3,7 @@ package com.Biblioteca.Controller;
 
 import com.Biblioteca.DTO.Persona.*;
 import com.Biblioteca.Exceptions.Mensaje;
-import com.Biblioteca.Service.PersonaService;
+import com.Biblioteca.Service.Persona.PersonaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
