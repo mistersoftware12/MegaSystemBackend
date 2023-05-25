@@ -6,20 +6,13 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Data
-public class PersonaClienteRequest implements Serializable {
+public class PersonaProveedorRequest implements Serializable {
 
-    private String cedula;
-
-    private String apellidos;
-
-    private String nombres;
-
-    private Date fechaNacimiento;
-
+    private Long id;
+    private String propietario;
     private String telefono;
-
+    private String nombreComercial;
     private String email;
-
     private Long idEmpresa;
 
 

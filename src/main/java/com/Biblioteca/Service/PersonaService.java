@@ -2,15 +2,16 @@ package com.Biblioteca.Service;
 
 import com.Biblioteca.DTO.Persona.*;
 import com.Biblioteca.Exceptions.BadRequestException;
-import com.Biblioteca.Models.Categoria.Categoria;
 import com.Biblioteca.Models.Empresa.Empresa;
 import com.Biblioteca.Models.Persona.Cliente;
 import com.Biblioteca.Models.Persona.Persona;
+import com.Biblioteca.Models.Persona.Proveedor;
 import com.Biblioteca.Models.Persona.Usuario;
 import com.Biblioteca.Models.Roles.Roles;
 import com.Biblioteca.Repository.Empresa.EmpresaRepository;
 import com.Biblioteca.Repository.Persona.ClienteRepository;
 import com.Biblioteca.Repository.Persona.PersonaRepository;
+import com.Biblioteca.Repository.Persona.ProveedorRepository;
 import com.Biblioteca.Repository.Persona.UsuarioRepository;
 import com.Biblioteca.Repository.RolesRepository;
 import com.Biblioteca.Security.jwt.JwtUtil;
@@ -39,6 +40,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class PersonaService implements UserDetailsService {
+    @Autowired
+    private ProveedorRepository proveedorRepository;
     @Autowired
     private EmpresaRepository empresaRepository;
 
@@ -87,6 +90,10 @@ public class PersonaService implements UserDetailsService {
                     if (numero == 1) {
                         registrarUsuario(newPersona.getId(), personaUsuarioRequest);
                     }
+
+                    if(numero == 2){
+                        registrarCliente(newPersona.getId(), personaUsuarioRequest);
+                    }
                     return newPersona.getId();
                 } catch (Exception e) {
                     throw new BadRequestException("No se registró la proforma" + e);
@@ -127,6 +134,26 @@ public class PersonaService implements UserDetailsService {
 
     }
 
+    public Long registrarCliente(Long idPersona, PersonaUsuarioRequest personaUsuarioRequest) {
+        Optional<Persona> optionalPersona = personaRepository.findById(idPersona);
+        if (optionalPersona.isPresent()) {
+
+            Cliente newCliente = new Cliente();
+            newCliente.setPersona(optionalPersona.get());
+                try {
+                    clienteRepository.save(newCliente);
+                    return newCliente.getId();
+                } catch (Exception e) {
+                    throw new BadRequestException("No se registró la proforma" + e);
+                }
+
+        } else {
+            throw new BadRequestException("No existe una persona con id " + idPersona);
+        }
+
+
+    }
+
     public List<PersonaUsuarioResponse> listAllUsuarios(Long idEmpresa){
         List<Usuario> usuarios = usuarioRepository.findAllByIdEmpresa(idEmpresa);
         return usuarios.stream().map(usuarioRequest->{
@@ -141,6 +168,38 @@ public class PersonaService implements UserDetailsService {
             pcr.setFechaNacimiento(usuarioRequest.getPersona().getFechaNacimiento());
             pcr.setIdRol(usuarioRequest.getRoles().getId());
             pcr.setNombreRol(usuarioRequest.getRoles().getDescripcion());
+            return pcr;
+        }).collect(Collectors.toList());
+    }
+
+    public List<PersonaUsuarioResponse> listAllClientes(Long idEmpresa){
+        List<Cliente> clientes = clienteRepository.findAllByIdEmpresa(idEmpresa);
+
+        return clientes.stream().map(usuarioRequest->{
+            PersonaUsuarioResponse pcr = new PersonaUsuarioResponse();
+            pcr.setId(usuarioRequest.getPersona().getId());
+            pcr.setIdUsuario(usuarioRequest.getId());
+            pcr.setCedula(usuarioRequest.getPersona().getCedula());
+            pcr.setNombres(usuarioRequest.getPersona().getNombres());
+            pcr.setApellidos(usuarioRequest.getPersona().getApellidos());
+            pcr.setTelefono(usuarioRequest.getPersona().getTelefono());
+            pcr.setEmail(usuarioRequest.getPersona().getEmail());
+            pcr.setFechaNacimiento(usuarioRequest.getPersona().getFechaNacimiento());
+            return pcr;
+        }).collect(Collectors.toList());
+    }
+
+    public List<PersonaProveedorResponse> listAllProveedor(Long idEmpresa){
+        List<Proveedor> proveedors =  proveedorRepository.findAllByIdEmpresa(idEmpresa);
+
+        return proveedors.stream().map(provRequest->{
+            PersonaProveedorResponse pcr = new PersonaProveedorResponse();
+            pcr.setId(provRequest.getId());
+            pcr.setPropietario(provRequest.getPropietario());
+            pcr.setNombreComercial(provRequest.getNombreComercial());
+            pcr.setTelefono(provRequest.getTelefono());
+            pcr.setEmail(provRequest.getEmail());
+
             return pcr;
         }).collect(Collectors.toList());
     }
@@ -170,6 +229,46 @@ public class PersonaService implements UserDetailsService {
 
     }
 
+    public PersonaUsuarioResponse clienteByCedula(Long id){
+
+        PersonaUsuarioResponse response = new PersonaUsuarioResponse();
+        Optional<Cliente> usuarioRequest = clienteRepository.findById(id);
+
+        if(usuarioRequest.isPresent()){
+            response.setId(usuarioRequest.get().getId());
+            response.setIdPersona(usuarioRequest.get().getPersona().getId());
+            response.setIdUsuario(usuarioRequest.get().getId());
+            response.setCedula(usuarioRequest.get().getPersona().getCedula());
+            response.setApellidos(usuarioRequest.get().getPersona().getApellidos());
+            response.setNombres(usuarioRequest.get().getPersona().getNombres());
+            response.setFechaNacimiento(usuarioRequest.get().getPersona().getFechaNacimiento());
+            response.setEmail(usuarioRequest.get().getPersona().getEmail());
+            response.setTelefono(usuarioRequest.get().getPersona().getTelefono());
+
+            return response;
+        }else{
+            throw new BadRequestException("No existe un usaurio con id seleccionado");
+        }
+
+
+    }
+
+    public PersonaProveedorResponse proveedorByCedula(Long id){
+        PersonaProveedorResponse response = new PersonaProveedorResponse();
+        Optional<Proveedor> proveedorRequest = proveedorRepository.findById(id);
+        if(proveedorRequest.isPresent()){
+            response.setId(proveedorRequest.get().getId());
+            response.setEmail(proveedorRequest.get().getEmail());
+            response.setTelefono(proveedorRequest.get().getTelefono());
+            response.setPropietario(proveedorRequest.get().getPropietario());
+            response.setNombreComercial(proveedorRequest.get().getNombreComercial());
+            return response;
+        }else{
+            throw new BadRequestException("No existe un usaurio con id seleccionado");
+        }
+    }
+
+
     @Transactional
     public boolean actualizarPersona(PersonaUsuarioRequest1 personaUsuarioRequest , int numero ){
 
@@ -181,6 +280,7 @@ public class PersonaService implements UserDetailsService {
             persona.get().setEmail(personaUsuarioRequest.getEmail());
             persona.get().setFechaNacimiento(personaUsuarioRequest.getFechaNacimiento());
             persona.get().setTelefono(personaUsuarioRequest.getTelefono());
+
             try{
                 personaRepository.save(persona.get());
                 if(numero==1){
@@ -226,6 +326,28 @@ public class PersonaService implements UserDetailsService {
 
         } else {
             throw new BadRequestException("No existe una persona  con id "+personaUsuarioRequest.getIdPersona() );
+        }
+    }
+
+    @Transactional
+    public boolean actualizarProveedor(PersonaProveedorResponse personaProveedorResponse){
+
+
+        Optional<Proveedor> proveedor = proveedorRepository.findById(personaProveedorResponse.getId());
+        if(proveedor.isPresent()){
+            proveedor.get().setPropietario(personaProveedorResponse.getPropietario());
+            proveedor.get().setNombreComercial(personaProveedorResponse.getNombreComercial());
+            proveedor.get().setEmail(personaProveedorResponse.getEmail());
+            proveedor.get().setTelefono(personaProveedorResponse.getTelefono());
+            try{
+                proveedorRepository.save(proveedor.get());
+                return true;
+            }catch (Exception ex) {
+                throw new BadRequestException("No se actualizo" + ex);
+            }
+
+        } else {
+            throw new BadRequestException("No existe un proveedor  con id "+personaProveedorResponse.getId() );
         }
     }
 
@@ -289,5 +411,47 @@ public class PersonaService implements UserDetailsService {
         nativeQuery.setParameter(1, cedula);
         return (BigInteger) nativeQuery.getSingleResult();
     }
+
+    public BigInteger countProveedor(String nombre, Long idEmpresa ) {
+        Query nativeQuery = entityManager.createNativeQuery("SELECT COUNT(id) FROM proveedor WHERE nombre_comercial =? AND empresa_id =?");
+        nativeQuery.setParameter(1, nombre);
+        nativeQuery.setParameter(2, idEmpresa);
+        return (BigInteger) nativeQuery.getSingleResult();
+    }
+
+
+
+
+
+    //PROVEEDOR
+
+    public Long registrarProveedor(PersonaProveedorRequest personaProveedorRequest) {
+
+        if (countProveedor(personaProveedorRequest.getNombreComercial(), personaProveedorRequest.getIdEmpresa()) == BigInteger.valueOf(0)) {
+            Optional<Empresa> optionalEmpresa = empresaRepository.findById(personaProveedorRequest.getIdEmpresa());
+            if (optionalEmpresa.isPresent()) {
+                Proveedor newProveedor = new Proveedor();
+                newProveedor.setNombreComercial(personaProveedorRequest.getNombreComercial());
+                newProveedor.setEmpresa(optionalEmpresa.get());
+                newProveedor.setPropietario(personaProveedorRequest.getPropietario());
+                newProveedor.setTelefono(personaProveedorRequest.getTelefono());
+                newProveedor.setEmail(personaProveedorRequest.getEmail());
+                try {
+                    proveedorRepository.save(newProveedor);
+                    return newProveedor.getId();
+                } catch (Exception e) {
+                    throw new BadRequestException("No se registró la proforma" + e);
+                }
+            } else {
+                throw new BadRequestException("No existe una empresa con id " + personaProveedorRequest.getIdEmpresa());
+            }
+
+
+        } else {
+            throw new BadRequestException("Ya existe un nombre Comercial registrado con para su empresa");
+        }
+
+    }
+
 
 }
