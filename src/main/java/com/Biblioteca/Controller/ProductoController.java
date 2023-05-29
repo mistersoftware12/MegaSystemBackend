@@ -50,5 +50,10 @@ public class ProductoController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
+    @GetMapping("/productoCodigo/{idEmpresa}/{codigoBarra}")
+    public ResponseEntity<ProductoResponse> listProductoByCodigo(@PathVariable Long idEmpresa, @PathVariable String codigoBarra){
+        ProductoResponse user = productoService.productoByBarra(idEmpresa, codigoBarra);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
 
 }

@@ -229,7 +229,7 @@ public class PersonaService implements UserDetailsService {
 
     }
 
-    public PersonaUsuarioResponse clienteByCedula(Long id){
+    public PersonaUsuarioResponse clienteByID(Long id){
 
         PersonaUsuarioResponse response = new PersonaUsuarioResponse();
         Optional<Cliente> usuarioRequest = clienteRepository.findById(id);
@@ -253,6 +253,30 @@ public class PersonaService implements UserDetailsService {
 
     }
 
+
+    public PersonaUsuarioResponse clienteByCédula(String cedula , Long idEmpresa){
+
+        PersonaUsuarioResponse response = new PersonaUsuarioResponse();
+        Optional<Cliente> usuarioRequest = clienteRepository.findAllByCedulaIdEmpresa(idEmpresa,cedula);
+
+        if(usuarioRequest.isPresent()){
+            response.setId(usuarioRequest.get().getId());
+            response.setIdPersona(usuarioRequest.get().getPersona().getId());
+            response.setIdUsuario(usuarioRequest.get().getId());
+            response.setCedula(usuarioRequest.get().getPersona().getCedula());
+            response.setApellidos(usuarioRequest.get().getPersona().getApellidos());
+            response.setNombres(usuarioRequest.get().getPersona().getNombres());
+            response.setFechaNacimiento(usuarioRequest.get().getPersona().getFechaNacimiento());
+            response.setEmail(usuarioRequest.get().getPersona().getEmail());
+            response.setTelefono(usuarioRequest.get().getPersona().getTelefono());
+
+            return response;
+        }else{
+            throw new BadRequestException("No existe el cliente con la cédula ingresado");
+        }
+
+
+    }
     public PersonaProveedorResponse proveedorByCedula(Long id){
         PersonaProveedorResponse response = new PersonaProveedorResponse();
         Optional<Proveedor> proveedorRequest = proveedorRepository.findById(id);
@@ -264,9 +288,10 @@ public class PersonaService implements UserDetailsService {
             response.setNombreComercial(proveedorRequest.get().getNombreComercial());
             return response;
         }else{
-            throw new BadRequestException("No existe un usaurio con id seleccionado");
+            throw new BadRequestException("No existe un cliente con la cédula ingresado");
         }
     }
+
 
 
     @Transactional

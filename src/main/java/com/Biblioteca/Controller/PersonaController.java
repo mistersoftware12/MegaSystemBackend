@@ -65,8 +65,14 @@ public class PersonaController {
     }
 
     @GetMapping("/cliente/{idCliente}")
-    public ResponseEntity<PersonaUsuarioResponse> listClienteByCedula(@PathVariable Long idCliente){
-        PersonaUsuarioResponse user = personaService.clienteByCedula(idCliente);
+    public ResponseEntity<PersonaUsuarioResponse> listClienteById(@PathVariable Long idCliente){
+        PersonaUsuarioResponse user = personaService.clienteByID(idCliente);
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @GetMapping("/clientepersona/{cedula}/{idEmpresa}")
+    public ResponseEntity<PersonaUsuarioResponse> listClienteByCedula(@PathVariable String cedula , @PathVariable Long idEmpresa){
+        PersonaUsuarioResponse user = personaService.clienteByCédula(cedula,idEmpresa);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 

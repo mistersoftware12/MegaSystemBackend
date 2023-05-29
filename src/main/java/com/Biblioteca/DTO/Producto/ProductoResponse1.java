@@ -15,4 +15,6 @@ public class ProductoResponse1 implements Serializable {
     private String  nombreCategoria;
     private String nombreProveedor;
 
+    private String codigoBarra;
+
 }

@@ -153,6 +153,7 @@ public class ProductoService {
             response.setPrecioVenta(sucursalRequest.getPrecioVenta());
             response.setNombreCategoria(sucursalRequest.getCategoria().getNombre());
             response.setNombreProveedor(sucursalRequest.getProveedor().getPropietario());
+            response.setCodigoBarra(sucursalRequest.getCodigoBarra());
             return response;
         }).collect(Collectors.toList());
     }
@@ -160,6 +161,26 @@ public class ProductoService {
     public ProductoResponse productoById(Long id){
         ProductoResponse response = new ProductoResponse();
         Optional<Producto> productoRequest = productoRepository.findById(id);
+        if(productoRequest.isPresent()){
+            response.setId(productoRequest.get().getId());
+            response.setNombre(productoRequest.get().getNombre());
+            response.setCodigoBarra(productoRequest.get().getCodigoBarra());
+            response.setStock(productoRequest.get().getStock());
+            response.setIva(productoRequest.get().getIva());
+            response.setPrecioCompra(productoRequest.get().getPrecioCompra());
+            response.setPrecioVenta(productoRequest.get().getPrecioVenta());
+            response.setIdCategoria(productoRequest.get().getCategoria().getId());
+            response.setIdProveedor(productoRequest.get().getProveedor().getId());
+
+            return response;
+        }else{
+            throw new BadRequestException("No existe una categoria con id seleccionado");
+        }
+    }
+
+    public ProductoResponse productoByBarra(Long idEmpresa , String codigoBarra){
+        ProductoResponse response = new ProductoResponse();
+        Optional<Producto> productoRequest = productoRepository.findAllByIdCodigoEmpresa(idEmpresa , codigoBarra);
         if(productoRequest.isPresent()){
             response.setId(productoRequest.get().getId());
             response.setNombre(productoRequest.get().getNombre());
@@ -219,7 +240,6 @@ public class ProductoService {
 
 
     }
-
 
 
     @PersistenceContext
