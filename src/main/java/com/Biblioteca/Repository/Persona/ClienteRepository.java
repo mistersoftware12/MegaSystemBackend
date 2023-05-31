@@ -18,4 +18,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     @Query(value = "SELECT * FROM cliente u INNER JOIN persona p ON u.persona_id = p.id WHERE p.empresa_id = :idEmpresa AND p.cedula =:cedula", nativeQuery = true)
     Optional<Cliente> findAllByCedulaIdEmpresa(Long idEmpresa ,String cedula);
 
+    @Query(value = "SELECT * FROM cliente u INNER JOIN persona p ON u.persona_id = p.id WHERE p.empresa_id = :idEmpresa AND u.id =:idCliente", nativeQuery = true)
+    Optional<Cliente> findAllByIdIdEmpresa(Long idEmpresa ,Long idCliente);
+
 }
