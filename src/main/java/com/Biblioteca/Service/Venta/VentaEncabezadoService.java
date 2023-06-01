@@ -1,23 +1,29 @@
 package com.Biblioteca.Service.Venta;
 
-import com.Biblioteca.DTO.Categoria.CategoriaRequest;
 import com.Biblioteca.DTO.Extra.IdResponse;
+import com.Biblioteca.DTO.Produccion.ContenidoProduccionResponse;
+import com.Biblioteca.DTO.Reporte.Reporte1Response;
 import com.Biblioteca.DTO.Venta.VentaContenidoRequest;
 import com.Biblioteca.DTO.Venta.VentaEncabezadoRequest;
+import com.Biblioteca.DTO.Venta.VentaEncabezadoResponse;
 import com.Biblioteca.Exceptions.BadRequestException;
-import com.Biblioteca.Models.Categoria.Categoria;
+import com.Biblioteca.Models.Credito.CreditoCliente;
 import com.Biblioteca.Models.Empresa.Empresa;
 import com.Biblioteca.Models.Persona.Cliente;
-import com.Biblioteca.Models.Persona.Proveedor;
 import com.Biblioteca.Models.Persona.Usuario;
+import com.Biblioteca.Models.Produccion.ContenidoProduccion;
+import com.Biblioteca.Models.Producto.Producto;
 import com.Biblioteca.Models.Tipo.TipoContenido;
 import com.Biblioteca.Models.Tipo.TipoPagoVenta;
 import com.Biblioteca.Models.Venta.VentaContenido;
 import com.Biblioteca.Models.Venta.VentaEncabezado;
 import com.Biblioteca.Repository.Categoria.CategoriaRepository;
+import com.Biblioteca.Repository.Credito.CreditoClienteRepository;
 import com.Biblioteca.Repository.Empresa.EmpresaRepository;
 import com.Biblioteca.Repository.Persona.ClienteRepository;
 import com.Biblioteca.Repository.Persona.UsuarioRepository;
+import com.Biblioteca.Repository.Produccion.ContenidoProduccionRepository;
+import com.Biblioteca.Repository.Producto.ProductoRepository;
 import com.Biblioteca.Repository.Tipo.TipoContenidoRepository;
 import com.Biblioteca.Repository.Tipo.TipoPagoVentaRepository;
 import com.Biblioteca.Repository.Venta.VentaContenidoRepository;
@@ -31,12 +37,20 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Slf4j
 @Service
 public class VentaEncabezadoService {
+    @Autowired
+    private CreditoClienteRepository creditoClienteRepository;
+    @Autowired
+    private ProductoRepository productoRepository;
+    @Autowired
+    private ContenidoProduccionRepository contenidoProduccionRepository;
     @Autowired
     private VentaContenidoRepository ventaContenidoRepository;
     @Autowired
@@ -83,6 +97,21 @@ public class VentaEncabezadoService {
 
                         try {
                             ventaEncabezadoRepository.save(ventaEncabezado);
+
+                            if(ventaEncabezadoRequest.getIdTipoPago() ==2){
+
+                                CreditoCliente creditoCliente = new CreditoCliente();
+                                creditoCliente.setEstado(false);
+                                creditoCliente.setValor_pendiente(ventaEncabezadoRequest.getTotal());
+                                creditoCliente.setVentaEncabezado(ventaEncabezado);
+
+                             try {
+                                 creditoClienteRepository.save(creditoCliente);
+                             }catch (Exception e){
+                                 throw new BadRequestException("No se guardo el credito" +e);
+                             }
+                            }
+
                             return new IdResponse(ventaEncabezado.getId());
 
                         }catch (Exception e){
@@ -102,7 +131,6 @@ public class VentaEncabezadoService {
         }
 
     }
-
     public Boolean registrarContenido(VentaContenidoRequest ventaContenidoRequest , Long idVentaEncabezado){
 
         Optional<TipoContenido> optionalTipoContenido =  tipoContenidoRepository.findById(ventaContenidoRequest.getTipo());
@@ -121,6 +149,14 @@ public class VentaEncabezadoService {
 
                 try {
                     ventaContenidoRepository.save(ventaContenido);
+                    if(ventaContenidoRequest.getTipo() == 1){
+                        restarStock(ventaContenidoRequest.getIdProducto() , ventaContenidoRequest.getCantidad());
+                    }
+
+                    if(ventaContenidoRequest.getTipo() == 2){
+                        listAllContenidoProduccion(ventaContenidoRequest.getIdProducto(),  ventaContenidoRequest.getCantidad());
+                    }
+
                     return true;
 
                 }catch (Exception e){
@@ -135,9 +171,48 @@ public class VentaEncabezadoService {
             throw  new BadRequestException("No existe una tipo contenido con id "+ventaContenidoRequest.getTipo());
         }
 
-
     }
+    public List<ContenidoProduccionResponse> listAllContenidoProduccion(Long idProduccion , float cantidad) {
+        List<ContenidoProduccion> productos = contenidoProduccionRepository.findAllByIdEmpresa(idProduccion);
+        return productos.stream().map(sucursalRequest->{
+            ContenidoProduccionResponse response = new ContenidoProduccionResponse();
 
+            restarStock(sucursalRequest.getProducto().getId() ,(sucursalRequest.getCantidad()*cantidad));
+            return response;
+        }).collect(Collectors.toList());
+    }
+    public List<VentaEncabezadoResponse> listAllVentas(Long idEmpresa , int mes , int anio) {
+        List<VentaEncabezado> venta = ventaEncabezadoRepository.findAllByIdEmpresaMesAnio(idEmpresa,mes,anio);
+        return venta.stream().map(dateRequest->{
+            VentaEncabezadoResponse response = new VentaEncabezadoResponse();
+
+            response.setId(dateRequest.getId());
+            response.setSecuencia(dateRequest.getSecuencia());
+            response.setFechaEmision(dateRequest.getFechaEmision());
+            response.setNombreUsuario(dateRequest.getUsuario().getPersona().getNombres()+" "+dateRequest.getUsuario().getPersona().getApellidos());
+            response.setCedulaCliente(dateRequest.getCliente().getPersona().getCedula());
+            response.setNombreCliente(dateRequest.getCliente().getPersona().getNombres()+" "+dateRequest.getCliente().getPersona().getApellidos());
+            response.setNombreTipoPago(dateRequest.getTipoPagoVenta().getDescripcion());
+            response.setTotal(dateRequest.getTotal());
+
+            return response;
+        }).collect(Collectors.toList());
+    }
+    public boolean restarStock(Long idProducto , float cantidad){
+
+        Optional<Producto> optionalProducto = productoRepository.findById(idProducto);
+        if(optionalProducto.isPresent()){
+            optionalProducto.get().setStock(countStockProducto(idProducto) - cantidad);
+            try {
+                productoRepository.save(optionalProducto.get());
+                return true;
+            }catch (Exception e){
+                throw new BadRequestException("No se registró el producto" +e);
+            }
+        }else{
+            throw new BadRequestException("No se encontro el producto con id" +idProducto);
+        }
+    }
     public String codigoSecuencia(Long idEmpresa){
 
         String valorFinal = "";
@@ -193,9 +268,31 @@ public class VentaEncabezadoService {
         return valorFinal;
     }
 
+    public Reporte1Response reporteCierreCaja(String cedulaUsuario , Date fecha){
+
+        System.out.println(fecha);
+        Reporte1Response reporte1 = new Reporte1Response();
+        Optional<Usuario> optionalUsuario = usuarioRepository. findByCedula(cedulaUsuario);
+        if(optionalUsuario.isPresent()){
+            reporte1.setVentaEfectivo(sumReporte1(1,optionalUsuario.get().getId(),fecha));
+            reporte1.setVentaCredito(sumReporte1(2,optionalUsuario.get().getId(),fecha));
+            reporte1.setVentaBancaria(sumReporte1(4,optionalUsuario.get().getId(),fecha));
+            reporte1.setVentaCheque(sumReporte1(3,optionalUsuario.get().getId(),fecha));
+            reporte1.setVentaDebito(sumReporte1(5,optionalUsuario.get().getId(),fecha));
+            reporte1.setVentaTotal(sumReporte2(optionalUsuario.get().getId(),fecha));
+            reporte1.setCobroEfectivo(sumReporte1(1,optionalUsuario.get().getId(),fecha));
+            reporte1.setCobroCredito(sumReporte3(optionalUsuario.get().getId(),fecha));
+            reporte1.setCobroTotal(reporte1.getCobroEfectivo() +reporte1.getCobroCredito());
+
+        }else{
+            throw new BadRequestException("No existe un usuario con cédula" +cedulaUsuario);
+        }
+
+        return reporte1;
+    }
+
     @PersistenceContext
     private EntityManager entityManager;
-
 
     public BigInteger countordenes(Long idEmpresa) {
         Query nativeQuery = entityManager.createNativeQuery("SELECT COUNT(secuencia) FROM venta_encabezado WHERE empresa_id =? ");
@@ -207,6 +304,49 @@ public class VentaEncabezadoService {
         Query nativeQuery = entityManager.createNativeQuery("SELECT MAX(secuencia) FROM venta_encabezado WHERE empresa_id =? ");
         nativeQuery.setParameter(1, idEmpresa);
         return (String) nativeQuery.getSingleResult();
+    }
+
+    public float countStockProducto(Long idProducto ) {
+        Query nativeQuery = entityManager.createNativeQuery("SELECT stock FROM producto WHERE id =?");
+        nativeQuery.setParameter(1, idProducto);
+        return (float) nativeQuery.getSingleResult();
+    }
+
+    public float sumReporte1(int tipo_pago ,Long idUsuario , Date fecha ) {
+        try {
+            Query nativeQuery = entityManager.createNativeQuery("SELECT SUM(total) FROM venta_encabezado WHERE tipo_pago_id =? AND usuario_id =? AND fecha_emision =?");
+            nativeQuery.setParameter(1, tipo_pago);
+            nativeQuery.setParameter(2, idUsuario);
+            nativeQuery.setParameter(3, fecha);
+            return (float) nativeQuery.getSingleResult();
+        }catch (Exception e){
+            return 0;
+        }
+
+    }
+
+    public float sumReporte2(Long idUsuario , Date fecha ) {
+        try {
+            Query nativeQuery = entityManager.createNativeQuery("SELECT SUM(total) FROM venta_encabezado WHERE  usuario_id =? AND fecha_emision =?");
+            nativeQuery.setParameter(1, idUsuario);
+            nativeQuery.setParameter(2, fecha);
+            return (float) nativeQuery.getSingleResult();
+        }catch (Exception e){
+            return 0;
+        }
+
+    }
+
+    public float sumReporte3(Long idUsuario , Date fecha ) {
+        try {
+            Query nativeQuery = entityManager.createNativeQuery("SELECT SUM(valor) FROM credito_cliente_contenido WHERE  usuario_id =? AND fecha_pago =?");
+            nativeQuery.setParameter(1, idUsuario);
+            nativeQuery.setParameter(2, fecha);
+            return (float) nativeQuery.getSingleResult();
+        }catch (Exception e){
+            return 0;
+        }
+
     }
 
 }

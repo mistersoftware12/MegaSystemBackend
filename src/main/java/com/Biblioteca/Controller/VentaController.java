@@ -3,6 +3,7 @@ package com.Biblioteca.Controller;
 
 import com.Biblioteca.DTO.Venta.VentaContenidoRequest;
 import com.Biblioteca.DTO.Venta.VentaEncabezadoRequest;
+import com.Biblioteca.DTO.Venta.VentaEncabezadoResponse;
 import com.Biblioteca.Exceptions.Mensaje;
 import com.Biblioteca.Service.Venta.VentaEncabezadoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +33,16 @@ public class VentaController {
         return new ResponseEntity<>(ventaEncabezadoService.registrarContenido(request, idVentaEncabezado), HttpStatus.OK);
     }
 
-    /*
-    @GetMapping("/allCategorias/{idEmpresa}")
-    public ResponseEntity<List<CategoriaRequest>> allCategorias(@PathVariable Long idEmpresa){
-        List<CategoriaRequest> allSucursal = categoriaService.listAllCategoria(idEmpresa);
+
+    @GetMapping("/allVentas/{idEmpresa}/{mes}/{anio}")
+    public ResponseEntity<List<VentaEncabezadoResponse>> allVentas(@PathVariable Long idEmpresa , @PathVariable int mes , @PathVariable int anio){
+        List<VentaEncabezadoResponse> allSucursal = ventaEncabezadoService.listAllVentas(idEmpresa , mes,anio);
         return new ResponseEntity<>(allSucursal, HttpStatus.OK);
     }
+
+
+    /*
+
 
 
     @PutMapping("/updateCategoria")

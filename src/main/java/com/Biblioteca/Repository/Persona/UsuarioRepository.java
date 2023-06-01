@@ -19,5 +19,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     @Query(value = "SELECT * FROM usuario u INNER JOIN persona p ON u.persona_id = p.id WHERE p.empresa_id = :idEmpresa AND p.cedula =:cedulaUsuario", nativeQuery = true)
     Optional<Usuario> findByIdCedulaEmpresa(Long idEmpresa , String cedulaUsuario);
 
+    @Query(value = "SELECT * FROM usuario u INNER JOIN persona p ON u.persona_id = p.id WHERE  p.cedula =:cedulaUsuario", nativeQuery = true)
+    Optional<Usuario> findByCedula(String cedulaUsuario);
+
     Optional<Usuario> findByPersona(Persona persona);
 }
