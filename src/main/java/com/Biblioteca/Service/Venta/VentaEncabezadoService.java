@@ -270,7 +270,7 @@ public class VentaEncabezadoService {
 
     public Reporte1Response reporteCierreCaja(String cedulaUsuario , Date fecha){
 
-        System.out.println(fecha);
+
         Reporte1Response reporte1 = new Reporte1Response();
         Optional<Usuario> optionalUsuario = usuarioRepository. findByCedula(cedulaUsuario);
         if(optionalUsuario.isPresent()){
