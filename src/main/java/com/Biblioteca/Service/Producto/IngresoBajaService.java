@@ -5,12 +5,14 @@ import com.Biblioteca.DTO.Producto.IngresoBajaProducto.IngresoBajaProductoReques
 import com.Biblioteca.Exceptions.BadRequestException;
 import com.Biblioteca.Models.Categoria.Categoria;
 import com.Biblioteca.Models.Empresa.Empresa;
+import com.Biblioteca.Models.Persona.Usuario;
 import com.Biblioteca.Models.Producto.Baja.BajaProducto;
 import com.Biblioteca.Models.Producto.Ingreso.IngresoProducto;
 import com.Biblioteca.Models.Producto.IngresoBaja.IngresoBajaProducto;
 import com.Biblioteca.Models.Producto.Producto;
 import com.Biblioteca.Repository.Categoria.CategoriaRepository;
 import com.Biblioteca.Repository.Empresa.EmpresaRepository;
+import com.Biblioteca.Repository.Persona.UsuarioRepository;
 import com.Biblioteca.Repository.Producto.Baja.BajaProductoRepository;
 import com.Biblioteca.Repository.Producto.Ingreso.IngresoProductoRepository;
 import com.Biblioteca.Repository.Producto.IngresoBajaProductoRepository;
@@ -31,6 +33,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class IngresoBajaService {
+    @Autowired
+    private UsuarioRepository usuarioRepository;
     @Autowired
     private EmpresaRepository empresaRepository;
 
@@ -62,25 +66,33 @@ public class IngresoBajaService {
         if(condicion == true){
             Optional<Producto> optionalProducto = productoRepository.findById(ingresoBajaProductoRequest.getIdProducto());
             if(optionalProducto.isPresent()){
-                IngresoBajaProducto newIngresoBajaProducto = new IngresoBajaProducto();
-                newIngresoBajaProducto.setProducto(optionalProducto.get());
-                newIngresoBajaProducto.setCantidad(ingresoBajaProductoRequest.getCantidad());
-                newIngresoBajaProducto.setFechaRegistro(ingresoBajaProductoRequest.getFechaRegistro());
-                newIngresoBajaProducto.setPrecioCompra(ingresoBajaProductoRequest.getPrecioCompra());
 
-                try {
-                    ingresoBajaProductoRepository.save(newIngresoBajaProducto);
-                    if(numero == 1){
-                        regitrarIngresoProdcuto(newIngresoBajaProducto.getId() , ingresoBajaProductoRequest);
-                    }
+                Optional<Usuario> optionalUsuario = usuarioRepository.findByCedula(ingresoBajaProductoRequest.getCedulaUsuario());
 
-                    if(numero == 2){
-                        regitrarBajaProdcuto(newIngresoBajaProducto.getId() , ingresoBajaProductoRequest);
+                if(optionalUsuario.isPresent()){
+                    IngresoBajaProducto newIngresoBajaProducto = new IngresoBajaProducto();
+                    newIngresoBajaProducto.setProducto(optionalProducto.get());
+                    newIngresoBajaProducto.setCantidad(ingresoBajaProductoRequest.getCantidad());
+                    newIngresoBajaProducto.setFechaRegistro(ingresoBajaProductoRequest.getFechaRegistro());
+                    newIngresoBajaProducto.setPrecioCompra(ingresoBajaProductoRequest.getPrecioCompra());
+                    newIngresoBajaProducto.setUsuario(optionalUsuario.get());
+                    try {
+                        ingresoBajaProductoRepository.save(newIngresoBajaProducto);
+                        if(numero == 1){
+                            regitrarIngresoProdcuto(newIngresoBajaProducto.getId() , ingresoBajaProductoRequest);
+                        }
+
+                        if(numero == 2){
+                            regitrarBajaProdcuto(newIngresoBajaProducto.getId() , ingresoBajaProductoRequest);
+                        }
+                        return true;
+                    }catch (Exception e){
+                        throw new BadRequestException("No se registró el producto" +e);
                     }
-                    return true;
-                }catch (Exception e){
-                    throw new BadRequestException("No se registró el producto" +e);
+                }else{
+                    throw new BadRequestException("No existe un usuario con cédula " +ingresoBajaProductoRequest.getCedulaUsuario());
                 }
+
             }else{
                 throw new BadRequestException("No existe un producto con id " +ingresoBajaProductoRequest.getIdProducto());
             }

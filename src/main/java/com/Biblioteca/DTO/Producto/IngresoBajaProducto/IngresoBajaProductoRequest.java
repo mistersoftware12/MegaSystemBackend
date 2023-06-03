@@ -14,5 +14,6 @@ public class IngresoBajaProductoRequest implements Serializable {
     private Date fechaRegistro;
     private Long idProducto;
     private String observacion;
+    private String cedulaUsuario;
 
 }

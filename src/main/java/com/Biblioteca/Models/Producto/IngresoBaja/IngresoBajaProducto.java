@@ -1,5 +1,6 @@
 package com.Biblioteca.Models.Producto.IngresoBaja;
 
+import com.Biblioteca.Models.Persona.Usuario;
 import com.Biblioteca.Models.Producto.Producto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,5 +35,8 @@ public class IngresoBajaProducto implements Serializable {
     @JoinColumn(name = "producto_id",referencedColumnName = "id")
     private Producto producto;
 
+    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @JoinColumn(name = "usuario_id",referencedColumnName = "id")
+    private Usuario usuario;
 
 }

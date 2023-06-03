@@ -1,10 +1,10 @@
 package com.Biblioteca.Controller;
 
-import com.Biblioteca.DTO.Caja.CajaRequest;
-import com.Biblioteca.DTO.Caja.CajaRequest2;
+import com.Biblioteca.DTO.Caja.*;
 import com.Biblioteca.DTO.Categoria.CategoriaRequest;
 import com.Biblioteca.DTO.Extra.IdResponse;
 import com.Biblioteca.Exceptions.Mensaje;
+import com.Biblioteca.Models.Categoria.Categoria;
 import com.Biblioteca.Service.Caja.CajaService;
 import com.Biblioteca.Service.Categoria.CategoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins= {"http://localhost:4200"})
 @RestController
@@ -40,5 +41,22 @@ CajaService cajaService;
         return new ResponseEntity<>(cajaService.cerrarCaja(request), HttpStatus.OK);
     }
 
+    @PostMapping("/registrarCobroCaja")
+    public ResponseEntity<?> registrarCobroCaja(@RequestBody CajaRequest request){
+        return new ResponseEntity<>(cajaService.registrarCobroCaja(request), HttpStatus.OK);
+    }
+
+    @GetMapping("/allCajaNoCobrado/{idEmpresa}")
+    public ResponseEntity<List<CajaResponse>> allCajaNoCobrado(@PathVariable Long idEmpresa){
+        List<CajaResponse> alldata = cajaService.listAllCajaPorCobrar(idEmpresa);
+        return new ResponseEntity<>(alldata, HttpStatus.OK);
+    }
+
+
+    @GetMapping("/resumen/{idUsuario}/{idEmpresa}/{fechaInicio}/{fechaFin}")
+    public ResponseEntity<CajaResponse1> resumen(@PathVariable Long idUsuario ,@PathVariable Long idEmpresa ,@PathVariable  Date fechaInicio ,@PathVariable  Date fechaFin  ){
+        CajaResponse1 data = cajaService.resumen(idUsuario,idEmpresa,fechaInicio,fechaFin);
+        return new ResponseEntity<>(data, HttpStatus.OK);
+    }
 
 }
