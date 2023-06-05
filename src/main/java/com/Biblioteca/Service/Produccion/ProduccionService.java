@@ -74,6 +74,7 @@ public class ProduccionService {
                         newProducto.setCodigoBarra(produccionRequest.getCodigoBarra());
                         newProducto.setIva(produccionRequest.getIva());
                         newProducto.setPrecioVenta(produccionRequest.getPrecioVenta());
+                        newProducto.setPrecioCompra(produccionRequest.getPrecioCompra());
                         try {
                             produccionRepository.save(newProducto);
                          return new IdResponse(newProducto.getId());
@@ -117,6 +118,7 @@ public class ProduccionService {
             response.setCodigoBarra(productoRequest.get().getCodigoBarra());
             response.setIva(productoRequest.get().getIva());
             response.setPrecioVenta(productoRequest.get().getPrecioVenta());
+            response.setPrecioCompra(productoRequest.get().getPrecioCompra());
             response.setListaContenidoProduccion(listAllContenidoProduccion(productoRequest.get().getId()));
             return response;
         }else{
@@ -132,6 +134,8 @@ public class ProduccionService {
             response.setNombre(productoRequest.get().getNombre());
             response.setCodigoBarra(productoRequest.get().getCodigoBarra());
             response.setIva(productoRequest.get().getIva());
+            response.setPrecioCompra(productoRequest.get().getPrecioCompra());
+            System.out.println(productoRequest.get().getPrecioCompra());
             response.setPrecioVenta(productoRequest.get().getPrecioVenta());
             //response.setListaContenidoProduccion(listAllContenidoProduccion(productoRequest.get().getId()));
             response.setCodigoBarra(productoRequest.get().getCodigoBarra());
@@ -153,6 +157,7 @@ public class ProduccionService {
                     optionalProducto.get().setNombre(produccionRequest.getNombre());
                     optionalProducto.get().setCodigoBarra(produccionRequest.getCodigoBarra());
                     optionalProducto.get().setIva(produccionRequest.getIva());
+                    optionalProducto.get().setPrecioCompra(produccionRequest.getPrecioCompra());
                     optionalProducto.get().setPrecioVenta(produccionRequest.getPrecioVenta());
 
                     try{

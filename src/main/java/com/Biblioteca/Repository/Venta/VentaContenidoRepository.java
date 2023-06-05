@@ -10,4 +10,6 @@ public interface VentaContenidoRepository extends JpaRepository<VentaContenido, 
     @Query(value = "SELECT * FROM categoria WHERE  empresa_id = :idEmpresa", nativeQuery = true)
     List<Categoria> findAllByIdEmpresa(Long idEmpresa);*/
 
+
+
 }

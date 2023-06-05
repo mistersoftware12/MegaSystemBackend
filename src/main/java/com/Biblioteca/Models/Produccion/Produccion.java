@@ -29,6 +29,8 @@ public class Produccion implements Serializable {
 
     private int iva;
 
+    private  float precioCompra;
+
     private  float precioVenta;
 
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})

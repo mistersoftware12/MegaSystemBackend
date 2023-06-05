@@ -33,6 +33,7 @@ public class Producto implements Serializable {
 
     private int iva;
 
+
     private  float precioVenta;
 
 

@@ -21,8 +21,6 @@ public class IngresoProducto implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinColumn(name = "ingreso_baja_producto_id",referencedColumnName = "id")
     private IngresoBajaProducto ingresoBajaProducto;

@@ -15,5 +15,5 @@ public class ProduccionResponse implements Serializable {
     private int iva;
     private  float precioVenta;
     private Long idEmpresa;
-    
+    private float precioCompra;
 }

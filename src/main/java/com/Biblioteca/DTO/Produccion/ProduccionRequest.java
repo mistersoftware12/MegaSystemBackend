@@ -12,6 +12,7 @@ public class ProduccionRequest implements Serializable {
     private String nombre;
     private String codigoBarra;
     private int iva;
+    private float precioCompra;
     private  float precioVenta;
     private Long idEmpresa;
 
