@@ -2,6 +2,7 @@ package com.Biblioteca.Service.Caja;
 import com.Biblioteca.DTO.Caja.*;
 import com.Biblioteca.DTO.Categoria.CategoriaRequest;
 import com.Biblioteca.DTO.Extra.IdResponse;
+import com.Biblioteca.DTO.Reporte.Reporte1Request;
 import com.Biblioteca.Exceptions.BadRequestException;
 import com.Biblioteca.Models.Caja.Caja;
 import com.Biblioteca.Models.Categoria.Categoria;
@@ -138,47 +139,47 @@ public class CajaService {
         }).collect(Collectors.toList());
     }
 
-    public CajaResponse1 resumen(Long idUsuario , Long idEmpresa , Date fechaInicio , Date fechaFin)   {
+    public CajaResponse1 resumen(Reporte1Request request)   {
 
-       if(idUsuario == 0){
+       if(request.getIdUsuario() == 0){
            CajaResponse1 caja = new CajaResponse1();
-           caja.setSubotal(consulta1Ge(idEmpresa,  fechaInicio, fechaFin));
+           caja.setSubotal(consulta1Ge(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin()));
            caja.setDescuento(0);
-           caja.setIva(consulta3Ge(idEmpresa,  fechaInicio, fechaFin));
-           caja.setTotal(consulta4Ge(idEmpresa,  fechaInicio, fechaFin));
-           caja.setGanancia(consulta5Ge(idEmpresa, fechaInicio, fechaFin));
-           caja.setEntrada(consulta6Ge(idEmpresa, fechaInicio, fechaFin));
-           caja.setBaja(consulta7Ge(idEmpresa, fechaInicio, fechaFin));
-           caja.setCobrado(consulta8G(idEmpresa, fechaInicio, fechaFin , true));
-           caja.setPorCobrar(consulta8G(idEmpresa, fechaInicio, fechaFin , false));
-           caja.setBaja(consulta9Ge(idEmpresa, fechaInicio, fechaFin));
+           caja.setIva(consulta3Ge(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin()));
+           caja.setTotal(consulta4Ge(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin()));
+           caja.setGanancia(consulta5Ge(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin()));
+           caja.setEntrada(consulta6Ge(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin()));
+           caja.setBaja(consulta7Ge(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin()));
+           caja.setCobrado(consulta8G(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin() , true));
+           caja.setPorCobrar(consulta8G(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin() , false));
+           caja.setApertura(consulta9Ge(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin()));
 
            return caja;
        }else {
 
 
-           Optional<Usuario> data = usuarioRepository.findById(idUsuario);
+           Optional<Usuario> data = usuarioRepository.findById(request.getIdUsuario());
            if (data.isPresent()) {
-               Optional<Empresa> data2 = empresaRepository.findById(idEmpresa);
+               Optional<Empresa> data2 = empresaRepository.findById(request.getIdEmpresa());
                if (data2.isPresent()) {
                    CajaResponse1 caja = new CajaResponse1();
-                   caja.setSubotal(consulta1(idEmpresa, idUsuario, fechaInicio, fechaFin));
+                   caja.setSubotal(consulta1(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin()));
                    caja.setDescuento(0);
-                   caja.setIva(consulta3(idEmpresa, idUsuario, fechaInicio, fechaFin));
-                   caja.setTotal(consulta4(idEmpresa, idUsuario, fechaInicio, fechaFin));
-                   caja.setGanancia(consulta5(idEmpresa, idUsuario, fechaInicio, fechaFin));
-                   caja.setEntrada(consulta6(idEmpresa, idUsuario, fechaInicio, fechaFin));
-                   caja.setBaja(consulta7(idEmpresa, idUsuario, fechaInicio, fechaFin));
-                   caja.setCobrado(consulta8(idEmpresa, idUsuario, fechaInicio, fechaFin , true));
-                   caja.setPorCobrar(consulta8(idEmpresa, idUsuario, fechaInicio, fechaFin , false));
-                   caja.setBaja(consulta9(idEmpresa, idUsuario, fechaInicio, fechaFin));
+                   caja.setIva(consulta3(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin()));
+                   caja.setTotal(consulta4(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin()));
+                   caja.setGanancia(consulta5(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin()));
+                   caja.setEntrada(consulta6(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin()));
+                   caja.setBaja(consulta7(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin()));
+                   caja.setCobrado(consulta8(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin() , true));
+                   caja.setPorCobrar(consulta8(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin() , false));
+                  caja.setApertura(consulta9(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin()));
 
                    return caja;
                } else {
-                   throw new BadRequestException("No existe una empresa com id " + idEmpresa);
+                   throw new BadRequestException("No existe una empresa com id " + request.getIdEmpresa());
                }
            } else {
-               throw new BadRequestException("No existe un usuario con id " + idUsuario);
+               throw new BadRequestException("No existe un usuario con id " + request.getIdUsuario());
            }
        }
     }

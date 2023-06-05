@@ -3,6 +3,7 @@ package com.Biblioteca.Controller;
 import com.Biblioteca.DTO.Caja.*;
 import com.Biblioteca.DTO.Categoria.CategoriaRequest;
 import com.Biblioteca.DTO.Extra.IdResponse;
+import com.Biblioteca.DTO.Reporte.Reporte1Request;
 import com.Biblioteca.Exceptions.Mensaje;
 import com.Biblioteca.Models.Categoria.Categoria;
 import com.Biblioteca.Service.Caja.CajaService;
@@ -52,11 +53,9 @@ CajaService cajaService;
         return new ResponseEntity<>(alldata, HttpStatus.OK);
     }
 
-
-    @GetMapping("/resumen/{idUsuario}/{idEmpresa}/{fechaInicio}/{fechaFin}")
-    public ResponseEntity<CajaResponse1> resumen(@PathVariable Long idUsuario ,@PathVariable Long idEmpresa ,@PathVariable  Date fechaInicio ,@PathVariable  Date fechaFin  ){
-        CajaResponse1 data = cajaService.resumen(idUsuario,idEmpresa,fechaInicio,fechaFin);
-        return new ResponseEntity<>(data, HttpStatus.OK);
+    @PostMapping("/consultaResumen1")
+    public ResponseEntity<?> registrconsultaResumen1arCobroCaja(@RequestBody Reporte1Request request){
+        return new ResponseEntity<>(cajaService.resumen(request), HttpStatus.OK);
     }
 
 }
