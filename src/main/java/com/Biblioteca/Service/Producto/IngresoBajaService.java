@@ -113,6 +113,9 @@ public class IngresoBajaService {
             try {
                 ingresoProductoRepository.save(newIngresoProducto);
                 sumarStock(ingresoBajaProductoRequest.getIdProducto() , ingresoBajaProductoRequest.getCantidad());
+                  Optional<Producto> optionalProducto = productoRepository.findById(ingresoBajaProductoRequest.getIdProducto());
+                  optionalProducto.get().setPrecioCompra(ingresoBajaProductoRequest.getPrecioCompra());
+                  productoRepository.save(optionalProducto.get());
                 return true;
             }catch (Exception e){
                 throw new BadRequestException("No se registró el producto" +e);
