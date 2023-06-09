@@ -21,5 +21,6 @@ public class ProductoRequest implements Serializable {
     private Long idCategoria;
     private Long idProveedor;
 
+    private  String cedulaUsuario;
 
 }

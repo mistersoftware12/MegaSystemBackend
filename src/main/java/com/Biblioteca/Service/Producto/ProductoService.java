@@ -9,12 +9,14 @@ import com.Biblioteca.Exceptions.BadRequestException;
 import com.Biblioteca.Models.Categoria.Categoria;
 import com.Biblioteca.Models.Empresa.Empresa;
 import com.Biblioteca.Models.Persona.Proveedor;
+import com.Biblioteca.Models.Persona.Usuario;
 import com.Biblioteca.Models.Producto.Ingreso.IngresoProducto;
 import com.Biblioteca.Models.Producto.IngresoBaja.IngresoBajaProducto;
 import com.Biblioteca.Models.Producto.Producto;
 import com.Biblioteca.Repository.Categoria.CategoriaRepository;
 import com.Biblioteca.Repository.Empresa.EmpresaRepository;
 import com.Biblioteca.Repository.Persona.ProveedorRepository;
+import com.Biblioteca.Repository.Persona.UsuarioRepository;
 import com.Biblioteca.Repository.Producto.Ingreso.IngresoProductoRepository;
 import com.Biblioteca.Repository.Producto.IngresoBajaProductoRepository;
 import com.Biblioteca.Repository.Producto.ProductoRepository;
@@ -35,6 +37,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class ProductoService {
+    @Autowired
+    private UsuarioRepository usuarioRepository;
     @Autowired
     private IngresoProductoRepository ingresoProductoRepository;
     @Autowired
@@ -79,7 +83,7 @@ public class ProductoService {
                         newProducto.setPrecioVenta(productoRequest.getPrecioVenta());
                         try {
                             productoRepository.save(newProducto);
-                            regitrarIngresoBajaProducto(newProducto.getId(), productoRequest.getStock() , productoRequest.getFechaPrimeraCompra(),productoRequest.getPrecioPrimeraCompra());
+                            regitrarIngresoBajaProducto(newProducto.getId(), productoRequest.getStock() , productoRequest.getFechaPrimeraCompra(),productoRequest.getPrecioPrimeraCompra() , productoRequest.getCedulaUsuario());
                             return true;
                         }catch (Exception e){
                             throw new BadRequestException("No se registró el producto" +e);
@@ -101,23 +105,33 @@ public class ProductoService {
     }
 
 
-    public boolean regitrarIngresoBajaProducto (Long idProducto , float cantidad , Date fecha , float precioCompra){
+    public boolean regitrarIngresoBajaProducto (Long idProducto , float cantidad , Date fecha , float precioCompra , String cedulaUsuario){
         Optional<Producto> optionalProducto = productoRepository.findById(idProducto);
         if(optionalProducto.isPresent()){
-            IngresoBajaProducto newIngresoBajaProducto = new IngresoBajaProducto();
-            newIngresoBajaProducto.setProducto(optionalProducto.get());
-            newIngresoBajaProducto.setCantidad(cantidad);
-            newIngresoBajaProducto.setFechaRegistro(fecha);
-            newIngresoBajaProducto.setPrecioCompra(precioCompra);
 
-            try {
-                ingresoBajaProductoRepository.save(newIngresoBajaProducto);
-                regitrarIngresoProdcuto(newIngresoBajaProducto.getId());
+            Optional<Usuario> optionalUsuario = usuarioRepository.findByCedula(cedulaUsuario);
 
-                return true;
-            }catch (Exception e){
-                throw new BadRequestException("No se registró el producto" +e);
+            if(optionalUsuario.isPresent()){
+                IngresoBajaProducto newIngresoBajaProducto = new IngresoBajaProducto();
+                newIngresoBajaProducto.setProducto(optionalProducto.get());
+                newIngresoBajaProducto.setCantidad(cantidad);
+                newIngresoBajaProducto.setFechaRegistro(fecha);
+                newIngresoBajaProducto.setPrecioCompra(precioCompra);
+                newIngresoBajaProducto.setUsuario(optionalUsuario.get());
+
+                try {
+                    ingresoBajaProductoRepository.save(newIngresoBajaProducto);
+                    regitrarIngresoProdcuto(newIngresoBajaProducto.getId());
+
+                    return true;
+                }catch (Exception e){
+                    throw new BadRequestException("No se registró el producto" +e);
+                }
+            }else{
+                throw new BadRequestException("No existe usuario con cédula " +cedulaUsuario);
             }
+
+
         }else{
             throw new BadRequestException("No existe un producto con id " +idProducto);
         }
