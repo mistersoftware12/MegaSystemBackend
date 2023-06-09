@@ -58,4 +58,9 @@ CajaService cajaService;
         return new ResponseEntity<>(cajaService.resumen(request), HttpStatus.OK);
     }
 
+    @PostMapping("/reporteVenta1")
+    public ResponseEntity<?> reporteVenta1(@RequestBody Reporte1Request request){
+        return new ResponseEntity<>(cajaService.reporteVentas(request), HttpStatus.OK);
+    }
+
 }

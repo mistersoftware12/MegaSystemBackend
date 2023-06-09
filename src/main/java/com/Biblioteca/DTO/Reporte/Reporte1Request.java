@@ -12,5 +12,7 @@ public class Reporte1Request implements Serializable {
     private Long idEmpresa;
     private Date fechaInicio;
     private Date fechaFin;
+    private int numero;
+
 
 }

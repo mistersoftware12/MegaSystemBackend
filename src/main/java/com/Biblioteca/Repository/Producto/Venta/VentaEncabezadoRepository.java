@@ -1,4 +1,4 @@
-package com.Biblioteca.Repository.Venta;
+package com.Biblioteca.Repository.Producto.Venta;
 
 
 import com.Biblioteca.Models.Venta.VentaEncabezado;

@@ -41,21 +41,4 @@ public class VentaController {
     }
 
 
-    /*
-
-
-
-    @PutMapping("/updateCategoria")
-    public ResponseEntity<?> updateSucursal(@RequestBody CategoriaRequest categoriaRequest){
-        categoriaService.actualizarcategoria(categoriaRequest);
-        return new ResponseEntity(new Mensaje("Categoria Actualizado"), HttpStatus.OK);
-    }
-
-    @GetMapping("/categoria/{id}")
-    public ResponseEntity<CategoriaRequest> listProveedorById(@PathVariable Long id){
-        CategoriaRequest user = categoriaService.categoriaById(id);
-        return new ResponseEntity<>(user, HttpStatus.OK);
-    }
-*/
-
 }

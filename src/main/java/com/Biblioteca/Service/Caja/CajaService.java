@@ -1,33 +1,53 @@
 package com.Biblioteca.Service.Caja;
 import com.Biblioteca.DTO.Caja.*;
-import com.Biblioteca.DTO.Categoria.CategoriaRequest;
 import com.Biblioteca.DTO.Extra.IdResponse;
 import com.Biblioteca.DTO.Reporte.Reporte1Request;
 import com.Biblioteca.Exceptions.BadRequestException;
 import com.Biblioteca.Models.Caja.Caja;
-import com.Biblioteca.Models.Categoria.Categoria;
 import com.Biblioteca.Models.Empresa.Empresa;
 import com.Biblioteca.Models.Persona.Usuario;
+import com.Biblioteca.Models.Produccion.Produccion;
+import com.Biblioteca.Models.Producto.Baja.BajaProducto;
+import com.Biblioteca.Models.Producto.Ingreso.IngresoProducto;
+import com.Biblioteca.Models.Producto.Producto;
+import com.Biblioteca.Models.Venta.VentaContenido;
 import com.Biblioteca.Repository.Caja.CajaRepository;
 import com.Biblioteca.Repository.Empresa.EmpresaRepository;
 import com.Biblioteca.Repository.Persona.UsuarioRepository;
+import com.Biblioteca.Repository.Produccion.ProduccionRepository;
+import com.Biblioteca.Repository.Producto.Baja.BajaProductoRepository;
+import com.Biblioteca.Repository.Producto.Ingreso.IngresoProductoRepository;
+import com.Biblioteca.Repository.Producto.ProductoRepository;
+import com.Biblioteca.Repository.Producto.Venta.VentaContenidoRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.math.BigInteger;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class CajaService {
+    @Autowired
+    private BajaProductoRepository bajaProductoRepository;
+    @Autowired
+    private IngresoProductoRepository ingresoProductoRepository;
+    @Autowired
+    private ProduccionRepository produccionRepository;
+    @Autowired
+    private ProductoRepository productoRepository;
+    @Autowired
+    private VentaContenidoRepository ventaContenidoRepository;
     @Autowired
     private EmpresaRepository empresaRepository;
 
@@ -138,6 +158,139 @@ public class CajaService {
             return response;
         }).collect(Collectors.toList());
     }
+
+    public CajaResponse2 reporteVentas(Reporte1Request request){
+        CajaResponse2 response = new CajaResponse2();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MMMMM/yyyy ", Locale.forLanguageTag("es-EC"));
+        response.setFechaInicioS(formatter.format(request.getFechaInicio()));
+        response.setFechaFinS(formatter.format(request.getFechaFin()));
+        response.setListaContenido(reporteVentas2(request));
+        return response;
+    }
+
+    public List<CajaContenidoResponse> reporteVentas2(Reporte1Request request){
+
+       //numero 1 informe de ventas
+       if(request.getNumero()==1){
+           List<VentaContenido> cajas = null;
+           if(request.getIdUsuario() == 0) {
+
+               cajas = ventaContenidoRepository.findAllReporte1(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin());
+
+           }else{
+               cajas = ventaContenidoRepository.findAllReporteUsuario1(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin());
+           }
+
+           return cajas.stream().map(dataRequest->{
+               CajaContenidoResponse response = new CajaContenidoResponse();
+               response.setSecuencia(dataRequest.getVentaEncabezado().getSecuencia());
+               response.setFecha(dataRequest.getVentaEncabezado().getFechaEmision());
+               response.setNombreUsuario(dataRequest.getVentaEncabezado().getUsuario().getPersona().getNombres()+" "+dataRequest.getVentaEncabezado().getUsuario().getPersona().getApellidos());
+
+               if(dataRequest.getTipoContenido().getId() == 1){
+                   Optional<Producto> optionalProducto1 = productoRepository.findById(dataRequest.getIdProducto());
+                   if(optionalProducto1.isPresent()){
+                       response.setNombreProducto(optionalProducto1.get().getNombre());
+                   }else{
+                       response.setNombreProducto("");
+                   }
+
+               }
+               if(dataRequest.getTipoContenido().getId() == 2){
+                   Optional<Produccion> optionalProducto5 = produccionRepository.findById(dataRequest.getIdProducto());
+                   if(optionalProducto5.isPresent()){
+                       response.setNombreProducto(optionalProducto5.get().getNombre());
+                   }else{
+                       response.setNombreProducto("");
+                   }
+
+               }
+               response.setCantidad(dataRequest.getCantidad());
+               response.setPrecioUnitario(dataRequest.getPrecioUnitario());
+               response.setPrecioIva(dataRequest.getPrecioIva());
+               response.setTotal(dataRequest.getPrecioTotal());
+               response.setGanancia(dataRequest.getGanancia());
+
+               return response;
+           }).collect(Collectors.toList());
+       }else{
+
+           if(request.getNumero() == 2){
+               //numero 2 informe entradas
+               List<IngresoProducto> cajas = null;
+               if(request.getIdUsuario() == 0) {
+
+                   cajas = ingresoProductoRepository.findAllReporte1(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin());
+
+               }else{
+                   cajas = ingresoProductoRepository.findAllReporteUsuario1(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin());
+               }
+
+               return cajas.stream().map(dataRequest->{
+                   CajaContenidoResponse response = new CajaContenidoResponse();
+                   response.setFecha(dataRequest.getIngresoBajaProducto().getFechaRegistro());
+                   response.setNombreUsuario(dataRequest.getIngresoBajaProducto().getUsuario().getPersona().getNombres()+" "+dataRequest.getIngresoBajaProducto().getUsuario().getPersona().getApellidos());
+                   response.setCantidad(dataRequest.getIngresoBajaProducto().getCantidad());
+                   response.setPrecioUnitario(dataRequest.getIngresoBajaProducto().getPrecioCompra());
+                   response.setTotal(dataRequest.getIngresoBajaProducto().getCantidad() * dataRequest.getIngresoBajaProducto().getPrecioCompra());
+                   response.setNombreProducto(dataRequest.getIngresoBajaProducto().getProducto().getNombre());
+                   return response;
+               }).collect(Collectors.toList());
+           }else{
+               if(request.getNumero() == 3){
+                   //numero 3 informe baja
+                   List<BajaProducto> cajas = null;
+                   if(request.getIdUsuario() == 0) {
+
+                       cajas = bajaProductoRepository.findAllReporte1(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin());
+
+                   }else{
+                       cajas = bajaProductoRepository.findAllReporteUsuario1(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin());
+                   }
+
+                   return cajas.stream().map(dataRequest->{
+                       CajaContenidoResponse response = new CajaContenidoResponse();
+                       response.setFecha(dataRequest.getIngresoBajaProducto().getFechaRegistro());
+                       response.setNombreUsuario(dataRequest.getIngresoBajaProducto().getUsuario().getPersona().getNombres()+" "+dataRequest.getIngresoBajaProducto().getUsuario().getPersona().getApellidos());
+                       response.setCantidad(dataRequest.getIngresoBajaProducto().getCantidad());
+                       response.setPrecioUnitario(dataRequest.getIngresoBajaProducto().getPrecioCompra());
+                       response.setTotal(dataRequest.getIngresoBajaProducto().getCantidad() * dataRequest.getIngresoBajaProducto().getPrecioCompra());
+                       response.setNombreProducto(dataRequest.getIngresoBajaProducto().getProducto().getNombre());
+                       response.setSecuencia(dataRequest.getObservacion());
+                       return response;
+                   }).collect(Collectors.toList());
+               }else{
+                   if(request.getNumero() == 4){
+                       //numero 4 cobrado
+                       List<Caja> cajas = null;
+                       if(request.getIdUsuario() == 0) {
+                           cajas = cajaRepository.findAllReporte1(request.getIdEmpresa(), request.getFechaInicio(), request.getFechaFin(),true);
+                       }else{
+                           cajas = cajaRepository.findAllReporteUsuario1(request.getIdEmpresa(), request.getIdUsuario(), request.getFechaInicio(), request.getFechaFin(),true);
+                       }
+
+                       return cajas.stream().map(dataRequest->{
+                           CajaContenidoResponse response = new CajaContenidoResponse();
+                           response.setFecha(dataRequest.getFechaRegistro());
+                           response.setNombreUsuario(dataRequest.getUsuario().getPersona().getNombres()+" "+dataRequest.getUsuario().getPersona().getApellidos());
+                           response.setTotal(dataRequest.getTotal_efectivo());
+                           response.setSaldoApertura(dataRequest.getSaldo_apertura());
+                           response.setTotalVenta(dataRequest.getTotal_venta());
+                           response.setFechaCobro(dataRequest.getFechaCobro());
+                           return response;
+                       }).collect(Collectors.toList());
+                   }else{
+                       return null;
+                   }
+               }
+           }
+
+       }
+
+
+
+    }
+
 
     public CajaResponse1 resumen(Reporte1Request request)   {
 
