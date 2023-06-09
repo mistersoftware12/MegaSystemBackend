@@ -32,6 +32,12 @@ CajaService cajaService;
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
 
+    @GetMapping("/resumenGeneral/{idEmpresa}")
+    public ResponseEntity<CajaResponse3> resumenGeneral(@PathVariable Long idEmpresa ){
+        CajaResponse3 data = cajaService.resumenGeneral(idEmpresa);
+        return new ResponseEntity<>(data, HttpStatus.OK);
+    }
+
     @PostMapping("/registrarAperturaCaja")
     public ResponseEntity<?> registroSucursal(@RequestBody CajaRequest request){
         return new ResponseEntity<>(cajaService.registrarApertura(request), HttpStatus.OK);

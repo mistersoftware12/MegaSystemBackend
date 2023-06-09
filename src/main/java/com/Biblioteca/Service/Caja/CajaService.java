@@ -338,6 +338,16 @@ public class CajaService {
     }
 
 
+    public CajaResponse3 resumenGeneral(Long idEmpresa)   {
+        CajaResponse3 caja = new CajaResponse3();
+        caja.setProductosTotal(consultaProductoTotal(idEmpresa));
+        caja.setStockTotal(consultaStockTotal(idEmpresa));
+        caja.setCompraEstimada(consultaCompraEstimada(idEmpresa));
+        caja.setVentaEstimada(consultaVentaEstimada(idEmpresa));
+        caja.setGananciaEstimada(consultaGananciaEstimada(idEmpresa));
+            return caja;
+    }
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -567,5 +577,56 @@ public class CajaService {
         }
     }
 
+//Consulta general
+public BigInteger consultaProductoTotal (Long idEmpresa) {
 
+        Query nativeQuery = entityManager.createNativeQuery("SELECT COUNT(ID) FROM producto WHERE empresa_id =?");
+        nativeQuery.setParameter(1, idEmpresa);
+        return (BigInteger) nativeQuery.getSingleResult();
+
+}
+
+    public float consultaStockTotal (Long idEmpresa) {
+        try {
+            Query nativeQuery = entityManager.createNativeQuery("SELECT SUM(stock)  FROM producto WHERE empresa_id =?");
+            nativeQuery.setParameter(1, idEmpresa);
+            return (float) nativeQuery.getSingleResult();
+        }catch (Exception e){
+            return  0;
+        }
+    }
+
+    public float consultaCompraEstimada (Long idEmpresa) {
+        try {
+            Query nativeQuery = entityManager.createNativeQuery("SELECT SUM(stock * precio_compra)  FROM producto WHERE empresa_id =?");
+            nativeQuery.setParameter(1, idEmpresa);
+            return (float) nativeQuery.getSingleResult();
+        }catch (Exception e){
+            return  0;
+        }
+    }
+
+    public float consultaVentaEstimada (Long idEmpresa) {
+        try {
+            Query nativeQuery = entityManager.createNativeQuery("SELECT SUM(stock * precio_venta)  FROM producto WHERE empresa_id =?");
+            nativeQuery.setParameter(1, idEmpresa);
+            return (float) nativeQuery.getSingleResult();
+        }catch (Exception e){
+            return  0;
+        }
+    }
+
+    public float consultaGananciaEstimada (Long idEmpresa) {
+        try {
+            Query nativeQuery = entityManager.createNativeQuery("SELECT SUM((stock * precio_venta)-(stock * precio_compra))  FROM producto WHERE empresa_id =?");
+            nativeQuery.setParameter(1, idEmpresa);
+            return (float) nativeQuery.getSingleResult();
+        }catch (Exception e){
+            return  0;
+        }
+    }
+
+/*
+   private float gananciaEstimada;
+ */
 }
