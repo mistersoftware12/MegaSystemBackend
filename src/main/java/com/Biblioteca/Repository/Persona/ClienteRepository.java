@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     Optional<Cliente> findByPersona (Persona persona);
 
-    @Query(value = "SELECT * FROM cliente u INNER JOIN persona p ON u.persona_id = p.id WHERE empresa_id = :idEmpresa", nativeQuery = true)
+    @Query(value = "SELECT * FROM cliente u INNER JOIN persona p ON u.persona_id = p.id WHERE empresa_id = :idEmpresa ORDER BY p.nombres ASC", nativeQuery = true)
     List<Cliente> findAllByIdEmpresa(Long idEmpresa);
 
     @Query(value = "SELECT * FROM cliente u INNER JOIN persona p ON u.persona_id = p.id WHERE p.empresa_id = :idEmpresa AND p.cedula =:cedula", nativeQuery = true)

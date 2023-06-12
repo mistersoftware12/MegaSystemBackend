@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
-    @Query(value = "SELECT * FROM producto WHERE  empresa_id = :idEmpresa", nativeQuery = true)
+    @Query(value = "SELECT * FROM producto WHERE  empresa_id = :idEmpresa ORDER BY nombre ASC", nativeQuery = true)
     List<Producto> findAllByIdEmpresa(Long idEmpresa);
 
     @Query(value = "SELECT * FROM producto WHERE  empresa_id = :idEmpresa AND codigo_barra =:codigoBarra", nativeQuery = true)
