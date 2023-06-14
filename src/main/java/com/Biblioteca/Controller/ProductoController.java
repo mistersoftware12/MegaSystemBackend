@@ -37,6 +37,12 @@ public class ProductoController {
         return new ResponseEntity<>(allSucursal, HttpStatus.OK);
     }
 
+    @GetMapping("/allProductos/{idEmpresa}/{aguja}")
+    public ResponseEntity<List<ProductoResponse1>> allProductosAguja(@PathVariable Long idEmpresa, @PathVariable String aguja){
+        List<ProductoResponse1> allSucursal =  productoService.listAllProductosAguja(idEmpresa,aguja);
+        return new ResponseEntity<>(allSucursal, HttpStatus.OK);
+    }
+
 
     @PutMapping("/updateProducto")
     public ResponseEntity<?> updateProducto(@RequestBody ProductoRequest productoRequest){
