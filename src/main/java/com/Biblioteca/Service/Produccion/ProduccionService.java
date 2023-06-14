@@ -109,6 +109,20 @@ public class ProduccionService {
         }).collect(Collectors.toList());
     }
 
+    public List<ProduccionResponse> listAllProduccionAguja(Long idEmpresa , String aguja) {
+        List<Produccion> productos = produccionRepository.findAllByIdEmpresaAguja(idEmpresa,"%"+aguja+"%");
+        return productos.stream().map(sucursalRequest->{
+            ProduccionResponse response = new ProduccionResponse();
+            response.setId(sucursalRequest.getId());
+            response.setNombre(sucursalRequest.getNombre());
+            response.setIva(sucursalRequest.getIva());
+            response.setPrecioVenta(sucursalRequest.getPrecioVenta());
+            response.setCodigoBarra(sucursalRequest.getCodigoBarra());
+
+            return response;
+        }).collect(Collectors.toList());
+    }
+
     public ProduccionResponse produccionById(Long id){
         ProduccionResponse response = new ProduccionResponse();
         Optional<Produccion> productoRequest = produccionRepository.findById(id);

@@ -43,6 +43,12 @@ public class ProduccionController {
         return new ResponseEntity<>(allSucursal, HttpStatus.OK);
     }
 
+    @GetMapping("/allProduccion/{idEmpresa}/{aguja}")
+    public ResponseEntity<List<ProduccionResponse>> allProductosAguja(@PathVariable Long idEmpresa, @PathVariable String aguja){
+        List<ProduccionResponse> allSucursal =  produccionService.listAllProduccionAguja(idEmpresa,aguja);
+        return new ResponseEntity<>(allSucursal, HttpStatus.OK);
+    }
+
     @GetMapping("/produccion/{id}")
     public ResponseEntity<ProduccionResponse> listProduccionById(@PathVariable Long id){
         ProduccionResponse user = produccionService.produccionById(id);
