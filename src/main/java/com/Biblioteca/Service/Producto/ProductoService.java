@@ -172,6 +172,22 @@ public class ProductoService {
         }).collect(Collectors.toList());
     }
 
+    public List<ProductoResponse1> listAllProductosStock(Long idEmpresa , int cantidad) {
+        List<Producto> productos = productoRepository.findAllByIdEmpresaStock(idEmpresa,cantidad);
+        return productos.stream().map(sucursalRequest->{
+            ProductoResponse1 response = new ProductoResponse1();
+            response.setId(sucursalRequest.getId());
+            response.setNombre(sucursalRequest.getNombre());
+            response.setStock(sucursalRequest.getStock());
+            response.setPrecioCompra(sucursalRequest.getPrecioCompra());
+            response.setPrecioVenta(sucursalRequest.getPrecioVenta());
+            response.setNombreCategoria(sucursalRequest.getCategoria().getNombre());
+            response.setNombreProveedor(sucursalRequest.getProveedor().getPropietario());
+            response.setCodigoBarra(sucursalRequest.getCodigoBarra());
+            return response;
+        }).collect(Collectors.toList());
+    }
+
     public List<ProductoResponse1> listAllProductosAguja(Long idEmpresa , String aguja) {
         List<Producto> productos = productoRepository.findAllByIdEmpresaAguja(idEmpresa,"%"+aguja+"%");
         return productos.stream().map(sucursalRequest->{

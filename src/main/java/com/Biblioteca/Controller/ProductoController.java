@@ -37,6 +37,12 @@ public class ProductoController {
         return new ResponseEntity<>(allSucursal, HttpStatus.OK);
     }
 
+    @GetMapping("/allProductoStock/{idEmpresa}/{cantidad}")
+    public ResponseEntity<List<ProductoResponse1>> allProductoStock(@PathVariable Long idEmpresa, @PathVariable int cantidad){
+        List<ProductoResponse1> allSucursal =  productoService.listAllProductosStock(idEmpresa,cantidad);
+        return new ResponseEntity<>(allSucursal, HttpStatus.OK);
+    }
+
     @GetMapping("/allProductos/{idEmpresa}/{aguja}")
     public ResponseEntity<List<ProductoResponse1>> allProductosAguja(@PathVariable Long idEmpresa, @PathVariable String aguja){
         List<ProductoResponse1> allSucursal =  productoService.listAllProductosAguja(idEmpresa,aguja);

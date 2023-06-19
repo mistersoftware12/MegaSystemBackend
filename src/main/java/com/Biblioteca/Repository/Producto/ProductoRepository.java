@@ -13,6 +13,9 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     @Query(value = "SELECT * FROM producto WHERE  empresa_id = :idEmpresa ORDER BY nombre ASC", nativeQuery = true)
     List<Producto> findAllByIdEmpresa(Long idEmpresa);
 
+    @Query(value = "SELECT * FROM producto WHERE  empresa_id = :idEmpresa  AND stock <=:cantidad ORDER BY nombre ASC", nativeQuery = true)
+    List<Producto> findAllByIdEmpresaStock(Long idEmpresa , int cantidad);
+
     @Query(value = "SELECT * FROM producto WHERE  empresa_id = :idEmpresa AND UPPER(nombre) LIKE UPPER (:aguja) ORDER BY  nombre ASC", nativeQuery = true)
     List<Producto> findAllByIdEmpresaAguja(Long idEmpresa, String aguja);
 
